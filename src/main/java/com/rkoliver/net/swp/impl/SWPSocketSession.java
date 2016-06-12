@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
+import com.rkoliver.net.swp.SWPConstants;
 import com.rkoliver.net.swp.SWPException;
 import com.rkoliver.net.swp.SWPFactory;
 import com.rkoliver.net.swp.SWPReadable;
@@ -23,8 +24,12 @@ public class SWPSocketSession implements SWPSession {
 	private InputStream in;
 	private byte[] buffer = New.bytes(0x00007fff);
 	private int offset = 0;
-	private int length = buffer.length;
-
+	private int bytesLeftInBuffer = buffer.length;
+	private int bytesLeftInPacket = 0;
+	private boolean additionalPackets = true;
+	private boolean startPacket = true;
+	private int packetStart = SWPConstants.SWP_UNKNOWN;
+	
 	public SWPSocketSession(Socket socket) throws SWPException {
 	
 		SWPException.requireNonNull(socket, "socket must not be null.");
@@ -120,10 +125,20 @@ public class SWPSocketSession implements SWPSession {
 	@Override
 	public SWPReadable read() throws SWPException {
 		
-		int originalLength = length;
+		if (bytesLeftInPacket == 0) {
+			
+			if (!additionalPackets) {
+
+				return null;
+			}
+			
+			readPacketHeader();
+		}
+		
+		int originalLength = bytesLeftInBuffer;
 		int codePointLength = readUInt16();
 		int overhead = 4;
-		if ((codePointLength & 0x80000000) == 0x80000000) {
+		if ((codePointLength & 0x00008000) == 0x00008000) {
 			
 			// 4-byte length
 			codePointLength = (codePointLength << 16 | readUInt16()) & 0x7fffffff;
@@ -131,7 +146,7 @@ public class SWPSocketSession implements SWPSession {
 		}
 		
 		int codePoint = readUInt16();
-		if ((codePoint & 0x80000000) == 0x80000000) {
+		if ((codePoint & 0x00008000) == 0x00008000) {
 			
 			// 4-byte codepoint
 			codePoint = (codePoint << 16 | readUInt16()) & 0x7fffffff;
@@ -139,7 +154,7 @@ public class SWPSocketSession implements SWPSession {
 		}
 		
 		if (codePointLength > originalLength) {
-		
+			// TODO: Support for codepoint split across multiple packets?
 			throw SWPException.partialCodePoint();
 		}
 		
@@ -147,7 +162,8 @@ public class SWPSocketSession implements SWPSession {
 		int i = cp.read(buffer, offset, codePointLength - overhead);
 		SWPException.requireTrue(i == codePointLength - overhead, "Actual codepoint length did not match reported codepoint length.");
 		offset += i;
-		length -= i;
+		bytesLeftInBuffer -= i;
+		bytesLeftInPacket -= i;
 		return cp;
 	}
 
@@ -155,9 +171,18 @@ public class SWPSocketSession implements SWPSession {
 	public void write(SWPWritable writable) throws SWPException {
 
 		SWPException.requireNonNull(writable, "writable must not be null.");
-		int i = writable.write(buffer, offset, length);
+		
+		if (startPacket) {
+			
+			// Write a placeholder length
+			packetStart = offset;
+			writeUInt16(SWPConstants.SWP_UNKNOWN);
+			startPacket = false;
+		}
+		
+		int i = writable.write(buffer, offset, bytesLeftInBuffer);
 		offset += i;
-		length -= i;
+		bytesLeftInBuffer -= i;
 	}
 
 	@Override
@@ -165,6 +190,14 @@ public class SWPSocketSession implements SWPSession {
 
 		SWPException.requireTrue(isOpen(), "Session is not open.");
 
+		if (packetStart != SWPConstants.SWP_UNKNOWN) {
+			
+			// Must update the packet header
+			int packetLength = offset - packetStart;
+			writeUInt16(packetLength, packetStart);
+			packetStart = SWPConstants.SWP_UNKNOWN;
+		}
+		
 		try {
 			
 			out.write(buffer, 0, offset);
@@ -177,7 +210,7 @@ public class SWPSocketSession implements SWPSession {
 		finally {
 		
 			offset = 0;
-			length = buffer.length;
+			bytesLeftInBuffer = buffer.length;
 		}
 	}
 
@@ -188,11 +221,11 @@ public class SWPSocketSession implements SWPSession {
 
 		try {
 			
-			length = in.read(buffer, 0, buffer.length);
+			bytesLeftInBuffer = in.read(buffer, 0, buffer.length);
 		} 
 		catch (IOException e) {
 
-			length = 0;
+			bytesLeftInBuffer = 0;
 			throw SWPException.convert(e);
 		}
 		finally {
@@ -203,10 +236,56 @@ public class SWPSocketSession implements SWPSession {
 
 	private int readUInt16() throws SWPException {
 
-		SWPException.requireTrue(length >= 2, "No more data available.");
+		// TODO: Check to see if there are enough bytes in the packet but not in the
+		// buffer.  If so, go back to the socket to read more data.
+		SWPException.requireTrue(bytesLeftInBuffer >= 2, "No more data available.");
+		SWPException.requireTrue(bytesLeftInPacket >= 2, "No more data available.");
 		int value = SWPConverter.convertUInt16BE(buffer, offset);
 		offset += 2;
-		length -= 2;
+		bytesLeftInBuffer -= 2;
+		bytesLeftInPacket -= 2;
 		return value;
+	}
+
+	private void readPacketHeader() throws SWPException {
+		
+		// TODO: Check to see if there are enough bytes in the packet but not in the
+		// buffer.  If so, go back to the socket to read more data.
+		SWPException.requireTrue(bytesLeftInBuffer >= 2, "No more data available.");
+		
+		bytesLeftInPacket = SWPConverter.convertUInt16BE(buffer, offset);
+
+		if ((bytesLeftInPacket & 0x00008000) == 0x00008000) {
+
+			// High bit set.  Additional packets follow.
+			additionalPackets = true;
+			bytesLeftInPacket = (bytesLeftInPacket & 0x00007fff);
+		}
+		else {
+			
+			additionalPackets = false;
+		}
+		
+		offset += 2;
+		bytesLeftInBuffer -= 2;
+		bytesLeftInPacket -= 2;
+	}
+	
+	private void writeUInt16(int value) throws SWPException {
+		
+		SWPException.requireTrue(bytesLeftInBuffer >= 2, "Ran out of buffer room.");
+		SWPConverter.convertUInt16BE(value, buffer, offset);
+		offset += 2;
+		bytesLeftInBuffer -= 2;
+	}
+	
+	private void writeUInt16(int value, int offset) throws SWPException {
+
+		SWPException.requireTrue(offset + 2 < buffer.length, "Ran out of buffer room.");
+		SWPConverter.convertUInt16BE(value, buffer, offset);
+		if (offset + 2 > this.offset) {
+			
+			this.offset = offset + 2;
+		}
 	}
 }

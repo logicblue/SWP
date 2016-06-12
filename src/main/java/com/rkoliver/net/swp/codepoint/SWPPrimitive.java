@@ -64,8 +64,8 @@ public class SWPPrimitive<T extends SWPData> implements SWPCodePoint {
 		SWPException.requireTrue(length >= codePointLength, "Buffer overflow.");
 		bytes[offset] = (byte)((codePointLength << 8) & 0xff);
 		bytes[offset + 1] = (byte)(codePointLength & 0xff);
-		bytes[offset + 2] = SWPConstants.SWP_CP_VARINT >>> 8;
-		bytes[offset + 3] = SWPConstants.SWP_CP_VARINT & 0xff;
+		bytes[offset + 2] = (byte)(codePoint >>> 8);
+		bytes[offset + 3] = (byte)(codePoint & 0xff);
 		if (isNull()) {
 			
 			bytes[offset + 4] = SWPConstants.NULL_INDICATOR;

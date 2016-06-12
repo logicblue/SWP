@@ -78,4 +78,9 @@ public class SWPException extends Exception {
 
 		return new SWPException("Codepoint factory not found for codepoint: " + codePoint);
 	}
+	
+	public static SWPException endOfStream() {
+		
+		return new SWPException("Unexpected end of stream encountered.");
+	}
 }
