@@ -1,0 +1,23 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+project.task('wrapper', type:Wrapper) {
+
+  description = "Generates the Gradle wrapper so people without Gradle installed can use our build"
+  group = "Build Infrastructure"
+
+  gradleVersion = "1.6"
+  jarFile = "gradle-wrapper/wrapper.jar"
+}
+
+repositories {
+	
+		mavenCentral()
+}
+
+dependencies {
+	
+	testCompile 'junit:junit:4.11'
+}
+	
+
