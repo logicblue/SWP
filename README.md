@@ -29,7 +29,7 @@ Each SWP request or reply starts and ends with a token byte which indicates whet
 
 ### 0000 0000
 
-No codepoint follows.  End of request/reply
+No codepoint follows; End of request/reply
 
 ### 0000 0001
 
@@ -37,7 +37,7 @@ A codepoint follows
 
 ### 0000 0010 - 1111 1111
 
-Reserved
+Reserved for future use
 
 ## Codepoints
 
@@ -63,31 +63,27 @@ TODO
 
 ### Codepoint Classes
 
-There are three codepoint classes with three different scopes.  In addition, each class of codepoints is divided into Object Codepoints and Primitive Codepoints.  Object Codepoints contain a length, can be split across SWP token-boundaries, and typically encapsulate other codepoints.  Primitive Codepoints contain, or box, raw data of a pre-defined length, or data that embeds its own length (i.e. `varints`).  Primitive codepoints should not include a length and cannot be split across SWP token boundaries.
+There are three codepoint classes with three different scopes: standard SWP codepoints, sub-protocol codepoints, and private codepoints. In addition, each class of codepoints is divided into Object Codepoints and Primitive Codepoints.  Object Codepoints contain a length, can be split across SWP token-boundaries, and typically encapsulate other codepoints.  Primitive Codepoints contain, or box, raw data of a pre-defined length, or data that embeds its own length (i.e. `varints`).  Primitive codepoints should not include a length and cannot be split across SWP token boundaries.
 
-### 000x xxxx xxxx xxxx
+### Standard SWP Codepoints: 000x xxxx xxxx xxxx
 
-Universal SWP codepoints.  Reserved for general SWP protocol.  Inherited by all sub-protocols.
+Reserved for SWP protocol. Inherited by all sub-protocols.
 
 #### Primitive Codepoints (0000 xxxx xxxx xxxx)
 
-0000 0001 0000 0000 - 0000 1111 1111 1111
-
-0x0100 - 0x0fff
-
-256 - 4095
+| Binary                                     | Hexidecimal      | Decimal     |
+| ------------------------------------------ | ---------------- | ----------- |
+| `0000 0001 0000 0000..0000 1111 1111 1111` | `0x0100..0x0fff` | `256..4095` |
 
 #### Object Codepoints (0001 xxxx xxxx xxxx)
 
-0001 0000 0000 0000 - 0001 1111 1111 1111
-
-0x1000 - 0x1fff
-
-4096 - 8191
+| Binary                                     | Hexidecimal      | Decimal      |
+| ------------------------------------------ | ---------------- | ------------ |
+| `0001 0000 0000 0000..0001 1111 1111 1111` | `0x1000..0x1fff` | `4096..8191` |
 
 ##### Notes
 
-Values 0x0000 - 0x00ff are not valid codepoints and should never appear in an SWP stream.  If a leading 0x00 appears in a context where a codepoint is expected it should be ignored.  A series of 0x00 values in a SWP stream is a "no-op slide" and may be used as padding in some cases.
+Values `0x0000..0x00ff` are not valid codepoints and should never appear in an SWP stream.  If a leading `0x00` appears in a context where a codepoint is expected it should be ignored.  A series of `0x00` values in a SWP stream is a "no-op slide" and may be used as padding in some cases.
 
 ### 001x xxxx xxxx xxxx
 
@@ -95,19 +91,15 @@ Sub-protocol specific codepoints.  Defined for a specific sub-protocol and may o
 
 #### Primitive Codepoints (0010 xxxx xxxx xxxx)
 
-0010 0000 0000 0000 - 0010 1111 1111 1111
-
-0x2000 - 0x2fff
-
-8192 - 12287
+| Binary                                     | Hexidecimal      | Decimal       |
+| ------------------------------------------ | ---------------- | ------------- |
+| `0010 0000 0000 0000..0010 1111 1111 1111` | `0x2000..0x2fff` | `8192..12287` |
 
 #### Object Codepoints (0011 xxxx xxxx xxxx)
 
-0011 0000 0000 0000 - 0011 1111 1111 1111
-
-0x3000 - 0x3fff
-
-12288 - 16383
+| Binary                                     | Hexidecimal      | Decimal        |
+| ------------------------------------------ | ---------------- | -------------- |
+| `0011 0000 0000 0000..0011 1111 1111 1111` | `0x3000..0x3fff` | `12288..16383` |
 
 ### 010x xxxx xxxx xxxx
 
@@ -115,29 +107,21 @@ Private codepoints.  Defined by a single developer/entity/etc and used to extend
 
 #### Primitive Codepoints (0100 xxxx xxxx xxxx)
 
-0100 0000 0000 0000 - 0100 1111 1111 1111
-
-0x4000 - 0x4fff
-
-16384 - 20479
+| Binary                                     | Hexidecimal      | Decimal        |
+| ------------------------------------------ | ---------------- | -------------- |
+| `0100 0000 0000 0000..0100 1111 1111 1111` | `0x4000..0x4fff` | `16384..20479` |
 
 #### Object Codepoints
 
-0101 0000 0000 0000 - 0101 1111 1111 1111
+| Binary                                     | Hexidecimal      | Decimal        |
+| ------------------------------------------ | ---------------- | -------------- |
+| `0101 0000 0000 0000..0101 1111 1111 1111` | `0x5000..0x5fff` | `20480..24575` |
 
-0x5000 - 0x5fff
+#### Reserved Codepoints: 011x xxxx xxxx xxxx
 
-20480 - 24575
-
-011x xxxx xxxx xxxx
-
-### Reserved codepoints.
-
-0110 0000 0000 0000 - 0111 1111 1111 1111
-
-0x6000 - 0x6fff
-
-24576 - 28671
+| Binary                                     | Hexidecimal      | Decimal        |
+| ------------------------------------------ | ---------------- | -------------- |
+| `0110 0000 0000 0000..0111 1111 1111 1111` | `0x6000..0x6fff` | `24576..28671` |
 
 ### 1xxx xxxx xxxx xxxx xxxx xxxx xxxx xxxx
 
