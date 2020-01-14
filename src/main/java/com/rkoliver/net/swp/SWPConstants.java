@@ -2,6 +2,8 @@ package com.rkoliver.net.swp;
 
 public class SWPConstants {
 
+	public static final byte SWP_TOKEN_CP = 0x01;
+
 	public static final int SWP_CP_CP = 0x00000100;
 	public static final int SWP_CP_BYTE = 0x00000101;
 	public static final int SWP_CP_SBYTE = 0x00000102;
