@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
-import com.rkoliver.net.swp.SWPConstants;
+import com.rkoliver.net.swp.SwpConstants;
 import com.rkoliver.net.swp.SWPException;
 import com.rkoliver.net.swp.SWPFactory;
 import com.rkoliver.net.swp.SWPReadable;
@@ -28,7 +28,7 @@ public class SWPSocketSession implements SWPSession {
 	private int bytesLeftInPacket = 0;
 	private boolean additionalPackets = true;
 	private boolean startPacket = true;
-	private int packetStart = SWPConstants.SWP_UNKNOWN;
+	private int packetStart = SwpConstants.SWP_UNKNOWN;
 	
 	public SWPSocketSession(Socket socket) throws SWPException {
 	
@@ -176,7 +176,7 @@ public class SWPSocketSession implements SWPSession {
 			
 			// Write a placeholder length
 			packetStart = offset;
-			writeUInt16(SWPConstants.SWP_UNKNOWN);
+			writeUInt16(SwpConstants.SWP_UNKNOWN);
 			startPacket = false;
 		}
 		
@@ -190,12 +190,12 @@ public class SWPSocketSession implements SWPSession {
 
 		SWPException.requireTrue(isOpen(), "Session is not open.");
 
-		if (packetStart != SWPConstants.SWP_UNKNOWN) {
+		if (packetStart != SwpConstants.SWP_UNKNOWN) {
 			
 			// Must update the packet header
 			int packetLength = offset - packetStart;
 			writeUInt16(packetLength, packetStart);
-			packetStart = SWPConstants.SWP_UNKNOWN;
+			packetStart = SwpConstants.SWP_UNKNOWN;
 		}
 		
 		try {
