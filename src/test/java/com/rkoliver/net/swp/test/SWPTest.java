@@ -1,11 +1,11 @@
 package com.rkoliver.net.swp.test;
 
 
-import com.rkoliver.net.swp.SWPConstants;
 import com.rkoliver.net.swp.SWPException;
 import com.rkoliver.net.swp.SWPReadable;
 import com.rkoliver.net.swp.SWPServer;
 import com.rkoliver.net.swp.SWPSession;
+import com.rkoliver.net.swp.SwpCodePoint;
 import com.rkoliver.net.swp.codepoint.SWPPrimitive;
 import com.rkoliver.net.swp.data.SWPVarInt;
 import com.rkoliver.net.swp.impl.SWPSocketServer;
@@ -71,7 +71,7 @@ public class SWPTest {
 
             SWPSession session = new SWPSocketSession(null, PORT);
             SWPVarInt varint = new SWPVarInt(1234567890);
-            SWPPrimitive<SWPVarInt> cp = new SWPPrimitive<>(SWPConstants.SWP_CP_VARINT, varint);
+            SWPPrimitive<SWPVarInt> cp = new SWPPrimitive<>(SwpCodePoint.VARINT.getValue(), varint);
             session.write(cp);
             session.open();
             session.send();
