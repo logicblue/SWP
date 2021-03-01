@@ -1,8 +1,9 @@
+name: Passthru test
 on: issue_comment
 jobs:
   set_input:
     name: Set some input
-    runs-on: linux-latest
+    runs-on: ubuntu-latest 
     steps:
       - name: Set some input
         id: passthru
