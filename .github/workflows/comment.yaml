@@ -1,3 +1,4 @@
+name: Passthru test
 on: issue_comment
 jobs:
   set_input:
