@@ -7,7 +7,7 @@ jobs:
     steps:
       - name: Set some input
         id: passthru
-        uses: GrubhubProd/spike-feci-actions/passthru@v1
+        uses: logicblue/rkoctions/passthru@v1
         with:
           in: 'This is my message!'
       - name: Get the output
