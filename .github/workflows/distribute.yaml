@@ -1,0 +1,19 @@
+# Distributes a build of SWP
+name: Distribute
+on: workflow_dispatch
+jobs:
+  build_and_distrubute:
+    name: Build and Distribute
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: Check Out
+        uses: actions/checkout@v2
+      - name: Build
+        run: ./gradlew build
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always()
+        with:
+          files: build/test-results/**/*.xml
+      - name: Distribute
+        run: echo "This could distribute something someday..."
