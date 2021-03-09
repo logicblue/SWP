@@ -4,6 +4,7 @@ import com.rkoliver.net.swp.*;
 import com.rkoliver.net.swp.codepoint.SWPCodePoint;
 import com.rkoliver.net.swp.util.New;
 import com.rkoliver.net.swp.util.SWPConverter;
+import com.rkoliver.net.swp.util.Tools;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,7 +38,8 @@ public class SWPSocketSession implements SWPSession {
 
             this.in = socket.getInputStream();
             this.out = socket.getOutputStream();
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
 
             this.socket = null;
             this.in = null;
@@ -57,21 +59,8 @@ public class SWPSocketSession implements SWPSession {
     }
 
     @Override
-    public void openWithRetry(int times, long pause, TimeUnit timeUnit) throws SWPException {
-        SWPException exception = null;
-
-        for (int retriesRemaining = times; retriesRemaining >= 0; retriesRemaining--) {
-            try {
-                open();
-                return;
-            } catch (SWPException e) {
-                exception = e;
-            }
-        }
-
-        if (exception != null) {
-            throw exception;
-        }
+    public void openWithRetry(final int times, final long pause, final TimeUnit timeUnit) throws SWPException {
+        Tools.retry(this::open, times, pause, timeUnit);
     }
 
     @Override
@@ -94,7 +83,8 @@ public class SWPSocketSession implements SWPSession {
             socket = new Socket(host, port);
             in = socket.getInputStream();
             out = socket.getOutputStream();
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
 
             socket = null;
             in = null;
@@ -113,10 +103,12 @@ public class SWPSocketSession implements SWPSession {
                 try {
 
                     socket.close();
-                } catch (IOException e) {
+                }
+                catch (IOException e) {
 
                     throw SWPException.convert(e);
-                } finally {
+                }
+                finally {
 
                     socket = null;
                     in = null;
@@ -216,10 +208,12 @@ public class SWPSocketSession implements SWPSession {
 
             out.write(buffer, 0, offset);
             out.flush();
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
 
             throw SWPException.convert(e);
-        } finally {
+        }
+        finally {
 
             offset = 0;
             bytesLeftInBuffer = buffer.length;
@@ -234,11 +228,13 @@ public class SWPSocketSession implements SWPSession {
         try {
 
             bytesLeftInBuffer = in.read(buffer, 0, buffer.length);
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
 
             bytesLeftInBuffer = 0;
             throw SWPException.convert(e);
-        } finally {
+        }
+        finally {
 
             offset = 0;
         }
@@ -270,7 +266,8 @@ public class SWPSocketSession implements SWPSession {
             // High bit set.  Additional packets follow.
             additionalPackets = true;
             bytesLeftInPacket = (bytesLeftInPacket & 0x00007fff);
-        } else {
+        }
+        else {
 
             additionalPackets = false;
         }
