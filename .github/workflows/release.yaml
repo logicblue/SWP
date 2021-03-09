@@ -10,6 +10,8 @@ jobs:
     name: Release
     runs-on: [ubuntu-latest]
     steps:
+      - name: Check Out
+        uses: actions/checkout@v2
       - name: Create release branch
         run: |
           git checkout -b release/${{ github.event.inputs.release_version }}
