@@ -2,30 +2,69 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
-      release_version:
-        description: The version of the release
+      release_or_rollback:
+        description: Whether this is a "release" or "rollback".
+        required: true
+      version:
+        description: The version of the release/rollback.
+        required: true
+      marketing_version:
+        description: The marketing version of the release/rollback.
+        required: true
+      build_number:
+        description: The build number of the release/rollback.
         required: true
 jobs:
   release:
     name: Release
     runs-on: [ubuntu-latest]
+    env:
+      RELEASE_OR_ROLLBACK: ${{ github.event.inputs.release_or_rollback }}
+      VERSION: ${{ github.event.inputs.version }}
+      MARKETING_VERSION: ${{ github.event.inputs.marketing_version }}
+      BUILD_NUMBER: ${{ github.event.inputs.build_number }}
+      NEW_BRANCH: ${{ github.event.inputs.release_or_rollback }}/${{ github.event.inputs.version }}
+    # These steps could be combined into a single step but breaking them out
+    # makes diagnosing failures easier.
     steps:
+      - name: Validate Input
+        run: |
+          case "$RELEASE_OR_ROLLBACK" in
+            "release"|"rollback")
+            ;;
+          *)
+            echo "Invalid value for release_or_rollback: $RELEASE_OR_ROLLBACK"
+            exit 1
+            ;;
+          esac
       - name: Identify Ourselves
         run: |
           git config --global user.email "robb.oliver@gmail.com"
           git config --global user.name "logicblue"
       - name: Check Out
         uses: actions/checkout@v2
-      - name: Create release branch
+      - name: Create Release/Rollback Branch
+        run: git checkout -b $NEW_BRANCH
+      - name: Update Versions
         run: |
-          git checkout -b release/${{ github.event.inputs.release_version }}
-          echo "${{ github.event.inputs.release_version }}" > version.txt
+          mkdir -p src/main/resources
+          pushd src/main/resources
+          echo "$MARKETING_VERSION ($VERSION.$BUILD_NUMBER)" > version.txt
+          popd
+      - name: Commit Changes
+        run: |
           git add .
-          git commit -m 'Releasing version ${{ github.event.inputs.release_version }}'
-          git push origin release/${{ github.event.inputs.release_version }}
+          git commit -m "Update version for $RELEASE_OR_ROLLBACK"
+          git push origin $NEW_BRANCH
+      - name: Show Changes
+        run: |
+          echo "------------------------------------------------------------"
+          echo "Changes were:"
+          git --no-pager diff "HEAD^"
+          echo "------------------------------------------------------------"
       - name: Worflow Dispatch
         uses: benc-uk/workflow-dispatch@v1.1
         with:
           workflow: Distribute
-          ref: release/${{ github.event.inputs.release_version }}
+          ref: ${{ github.event.inputs.release_or_rollback }}/${{ github.event.inputs.version }}
           token: ${{ secrets.RKO_ACTIONS_TOKEN }}

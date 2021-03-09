@@ -19,8 +19,8 @@ jobs:
         run: |
           echo "One day this might bundle up everything and upload it somewhere"
           echo "Right now we are just printing the version if it exists..."
-          if [ -f version.txt ]; then
-            echo "Version: $(cat version.txt)"
+          if [ -f src/main/resources/version.txt ]; then
+            echo "Version: $(cat src/main/resources/version.txt)"
           else
             echo "No version.txt file found!"
           fi
