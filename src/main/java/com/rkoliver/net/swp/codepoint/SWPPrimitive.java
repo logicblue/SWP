@@ -46,6 +46,7 @@ public class SWPPrimitive<T extends SWPData> implements SWPCodePoint {
     @SuppressWarnings("unchecked")
     @Override
     public int read(byte[] bytes, int offset, int codePointLength) throws SWPException {
+        SWPException.checkBuffer(bytes, offset, codePointLength);
 
         int nullIndicator = bytes[offset];
         int i = 0;

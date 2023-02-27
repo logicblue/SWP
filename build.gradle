@@ -1,11 +1,13 @@
-apply plugin: 'java'
+plugins {
+    id 'java'
+}
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    testCompile 'org.testng:testng:6.10'
+    testImplementation 'org.testng:testng:6.10'
 }
 
 test {
