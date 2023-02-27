@@ -8,14 +8,14 @@ import com.rkoliver.net.swp.impl.SWPSocketServer;
 import com.rkoliver.net.swp.impl.SWPSocketSession;
 import org.testng.annotations.Test;
 
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import static org.testng.Assert.fail;
 
 public class SWPTest {
 
-    private final static int PORT = 55555;
-
+    private int port = SwpConstants.SWP_UNKNOWN;
 
     @Test
     public void test() {
@@ -25,6 +25,7 @@ public class SWPTest {
             Thread serverThread = new Thread(this::server);
 
             serverThread.start();
+            Thread.sleep(1000);
             client();
             serverThread.join();
         } catch (InterruptedException e) {
@@ -37,9 +38,22 @@ public class SWPTest {
     private void server() {
 
         try {
-
-            SWPServer server = new SWPSocketServer(PORT);
-            server.listen();
+            SWPServer server = null;
+            port = SwpConstants.SWP_UNKNOWN;
+            int retries = 3;
+            for (int i = 0; i < retries; i++) {
+                try {
+                    port = new Random().nextInt(65535 - 49152) + 49152;
+                    server = new SWPSocketServer(port);
+                    server.listen();
+                    break;
+                }
+                catch (SWPException e) {
+                    if (i == retries - 1) {
+                        throw e;
+                    }
+                }
+            }
             SWPSession session = server.accept();
             session.receive();
             for (SWPReadable readable = session.read(); readable != null; readable = session.read()) {
@@ -58,7 +72,7 @@ public class SWPTest {
 
         try {
 
-            SWPSession session = new SWPSocketSession(PORT);
+            SWPSession session = new SWPSocketSession(port);
             SWPVarInt varint = new SWPVarInt(1234567890);
             SWPPrimitive<SWPVarInt> cp = new SWPPrimitive<>(SwpCodePoint.VARINT.getValue(), varint);
             session.write(cp);

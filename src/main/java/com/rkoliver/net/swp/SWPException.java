@@ -60,6 +60,12 @@ public class SWPException extends RuntimeException {
     }
 
 
+    public static void checkBuffer(byte[] buffer, int offset, int length) throws SWPException {
+        SWPException.requireNonNull(buffer, "Null buffer");
+        SWPException.requireTrue(offset >= 0 && offset < buffer.length, "Invalid offset");
+        SWPException.requireTrue(offset + length < buffer.length, "Invalid length");
+    }
+
     public static SWPException dataError(String string) {
 
         return new SWPException(string);

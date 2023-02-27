@@ -1,23 +1,7 @@
   on: pull_request
   jobs:
-    build:
+    check:
       runs-on: ubuntu-latest
       steps:
-        - uses: actions/checkout@v2
-        - run: ./gradlew compileJava
-    test:
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v2
-        - uses: actions/checkout@v2
-          with:
-            repository: logicblue/rkoctions
-            ref: main
-            path: rkoctions
-            token: ${{ secrets.RKO_ACTIONS_TOKEN }}
-        - run: ./gradlew test
-        - id: test
-          uses: ./rkoctions/passthru
-          with:
-            in: This is my test value
-        - run: 'echo Output: ${{ steps.test.outputs.out }}'
+        - uses: actions/checkout@v3
+        - run: ./gradlew check
